@@ -1,286 +1,274 @@
 # styled-components-breakpoint
 
-![npm](https://img.shields.io/npm/v/styled-components-breakpoint.svg) ![npm bundle size (minified + gzip)](https://img.shields.io/bundlephobia/minzip/styled-components-breakpoint.svg) ![npm](https://img.shields.io/npm/dm/styled-components-breakpoint.svg) [![Build Status](https://travis-ci.org/jameslnewell/styled-components-breakpoint.svg?branch=master)](https://travis-ci.org/jameslnewell/styled-components-breakpoint)
+![npm](https://img.shields.io/npm/v/styled-components-breakpoint.svg) ![npm bundle size (minified + gzip)](https://img.shields.io/bundlephobia/minzip/styled-components-breakpoint.svg) ![npm](https://img.shields.io/npm/dm/styled-components-breakpoint.svg) [![Build Status]![GithubActions](https://github.com/jameslnewell/styled-components-breakpoint/workflows/main/badge.svg)](https://github.com/jameslnewell/styled-components-breakpoint/actions)
 
 Utility functions for creating breakpoints in `styled-components` 💅.
 
-> [Change log](https://github.com/jameslnewell/styled-components-breakpoint/blob/master/CHANGELOG.md)
+> 🕸 [Website](https://jameslnewell.github.io/styled-components-breakpoint/)
 
-> Have a look 👀 at [`styled-components-spacing`](https://github.com/jameslnewell/styled-components-spacing) and [`styled-components-grid`](https://github.com/jameslnewell/styled-components-grid) which both work well with this package.
+> 📘 [Change log](https://github.com/jameslnewell/styled-components-breakpoint/blob/master/CHANGELOG.md)
+
+> 👀 Have a look at [`styled-components-spacing`](https://github.com/jameslnewell/styled-components-spacing) and [`styled-components-grid`](https://github.com/jameslnewell/styled-components-grid) which both work well with this package.
 
 ## Installation
 
-```bash
-yarn add styled-components styled-components-breakpoint
+NPM:
+
 ```
-    
+npm install styled-components-breakpoint
+```
+
+Yarn:
+
+```bash
+yarn add styled-components-breakpoint
+```
+
 ## Usage
 
-> [Examples](https://jameslnewell.github.io/styled-components-breakpoint/)
+### Using the themable mixins
 
-### Using the default breakpoints
-
-`./Heading.jsx`
-
-```js
+```jsx
 import styled from 'styled-components';
-import breakpoint from 'styled-components-breakpoint';
+import breakpoint, {map} from 'styled-components-breakpoint';
 
 const Heading = styled.h1`
-
   color: #444;
   font-family: sans-serif;
-  
   font-size: 12px;
-  
-  ${breakpoint('tablet')`
-    font-size: 16px;
-  `}
-  
-  ${breakpoint('desktop')`
-    font-size: 24px;
-  `}
-  
-`;
 
-export default Heading;
-
-```
-
-`./index.jsx`
-
-```js
-import React from 'react';
-import Heading from './Heading';
-
-<Heading>Hello World!</Heading>
-
-```
-
-### Using custom breakpoints
-
-Breakpoints may be customised using `ThemeProvider`. For example, to use the same breakpoints as [Bootstrap](https://getbootstrap.com/docs/4.0/layout/overview/#responsive-breakpoints), you can do so like this:
-
-`./Heading.jsx`
-```js
-import styled from 'styled-components';
-import breakpoint from 'styled-components-breakpoint';
-
-const Heading = styled.h1`
-
-  color: #444;
-  font-family: sans-serif;
-  
-  ${breakpoint('sm')`
-    font-size: 12px;
-  `}
-  
   ${breakpoint('md')`
     font-size: 16px;
   `}
-  
-  ${breakpoint('lg')`
+
+  ${breakpoint('xl')`
     font-size: 24px;
   `}
-  
+
+  ${map({mobile: 'red', desktop: 'green'}, color => `color: ${color};`)}
+
 `;
-
-export default Heading;
-
 ```
 
-`./index.jsx`
+### Using custom breakpoints for the themable mixins
 
-```js
+The themable breakpoints can be customised using `ThemeProvider`. For example, to use the same breakpoints as [Bootstrap](https://getbootstrap.com/docs/4.0/layout/overview/#responsive-breakpoints), you can do so like this:
+
+```jsx
 import React from 'react';
+import ReactDOM from 'react-dom';
 import {ThemeProvider} from 'styled-components';
 
 const theme = {
-  breakpoints: { 
+  breakpoints: {
     xs: 0,
     sm: 576,
     md: 768,
     lg: 992,
-    xl: 1200
-  }
+    xl: 1200,
+  },
 };
 
-<ThemeProvider theme={theme}>
-  <Heading>Hello World!</Heading>
-</ThemeProvider>
+ReactDOM.render(
+  <ThemeProvider theme={theme}>{/* ... */}</ThemeProvider>,
+  document.getElementById('app'),
+);
+```
 
+If you're using Typescript, you'll also need to define the breakpoints and spacings on the theme.
+
+`styled.d.ts`
+
+```tsx
+import {DefaultTheme} from 'styled-components';
+
+declare module 'styled-components' {
+  export interface DefaultTheme {
+    breakpoints: {
+      [name in 'xs' | 'sm' | 'md' | 'lg' | 'xl']: number;
+    };
+  }
+}
+```
+
+### Using the mixin factories
+
+If your breakpoints and spacings don't need to be themable then you can use the static mixin factories.
+
+`breakpoints.js`: Configure the breakpoints
+
+```jsx
+import styled from 'styled-components';
+import {createBreakpoint, createMap} from 'styled-components-breakpoint';
+
+const breakpoints = {
+  xs: 0,
+  sm: 576,
+  md: 768,
+  lg: 992,
+  xl: 1200,
+};
+
+const breakpoint = createBreakpoint(breakpoints);
+const map = createMap(breakpoints);
+
+const Heading = styled.h1`
+  color: #444;
+  font-family: sans-serif;
+  font-size: 12px;
+
+  ${breakpoint('md')`
+    font-size: 16px;
+  `}
+
+  ${breakpoint('xl')`
+    font-size: 24px;
+  `}
+
+  ${map({md: 'red', xl: 'green'}, color => `color: ${color};`)}
+
+`;
 ```
 
 ## API
 
-### `breakpoint(gte)`
-### `breakpoint(gte, lt)`
+### breakpoint(a, b)
 
-Wraps styles in a `@media` block.
+Generate a media query using using the set of breakpoints defined in the theme.
 
-**Properties:**
-- `gte` - Required. A `string`. The name of the breakpoint from which the styles will apply.
-- `lt` - Optional. A `string`. The name of the breakpoint at which the styles will no longer apply.
+**Parameters:**
 
-**Returns:**
+- `a` - Required - The breakpoint name at which the style applies.
+- `b` - Optional - The breakpoint name at which the style stops applying.
 
-The `@media` block.
+**Example:**
 
-##### Example:
-```js
+```jsx
 import styled from 'styled-components';
 import breakpoint from 'styled-components-breakpoint';
 
-const Thing = styled.div`
-
+export const Heading = styled.h1`
   font-size: 12px;
-
   ${breakpoint('tablet')`
     font-size: 16px;
-  `};
-
+  `}
   ${breakpoint('desktop')`
     font-size: 24px;
-  `};
-  
+  `}
 `;
 
-<Thing/>
-
+// font-size will increase/decrease with the window size
+<Heading>The quick brown fox jumps over the lazy dog</Heading>;
 ```
 
-##### Output:
-```css
-.cESAFm {
-  font-size: 12px;
-}
+### map(valueOrValues, mapValueToStyle)
 
-@media (min-width: 46.0625em) {
-  .cESAFm {
-    font-size: 16px;
-  }
-}
+Map a set of values to a set of media queries using the set of breakpoints defined in the theme.
 
-@media (min-width: 64.0625em) {
-  .cESAFm {
-    font-size: 24px;
-  }
-}
-```
+**Parameters:**
 
+- `valueOrValues` - Required - The value or a map of values to style at each breakpoint.
+- `mapValueToStyle` - Required - The function used to map a value to style.
 
-### `map(value, mapValueToCSS)`
+**Example:**
 
-Maps values to styles in `@media` blocks.
-
-**Properties:**
-- `value` - Required. `{[string]: T}` or `T`. A map of values to breakpoint names.
-- `mapValueToCSS` - Required. `T => string`. A function to map a value to styles at the specified breakpoint.
-
-**Returns:**
-
-The `@media` blocks.
-
-##### Example:
-
-```js
+```jsx
 import styled from 'styled-components';
 import {map} from 'styled-components-breakpoint';
 
-const Thing = styled.div`
-  ${({size}) => map(size, val => `width: ${Math.round(val * 100)}%;`)}
+const sizes = {
+  sm: '12px',
+  md: '16px',
+  lg: '20px',
+}
+
+const fontSize = ({size}) => map(size, s => `font-size: ${sizes[s]};`);
+
+export const Heading = styled.h1`
+  ${fontSize}
 `;
 
-<Thing size={{mobile: 1, tablet: 1/2, desktop: 1/4}}/>
+// font-size will always remain the same size
+<Heading size="sm">The quick brown fox jumps over the lazy dog</Heading>
 
+// font-size will increase/decrease with the window size
+<Heading size={{mobile: 'sm', tablet: 'lg'}}>The quick brown fox jumps over the lazy dog</Heading>
 ```
 
-##### Output:
+### createBreakpoint(breakpoints)
 
-```css
-.cESAFm {
-  width: 100%;
-}
+Create a `breakpoint(a, b)` function to generate a media query using a set of pre-defined breakpoints.
 
-@media (min-width: 46.0625em) {
-  .cESAFm {
-    width: 50%;
-  }
-}
+**Parameters:**
 
-@media (min-width: 64.0625em) {
-  .cESAFm {
-    width: 25%;
-  }
-}
-```
+- `breakpoints` - Required - A set of breakpoints.
 
-### `createStatic()`
-### `createStatic(breakpoints)`
-
-Creates a static set of breakpoints which aren't themable.
-
-**Properties:**
-- `breakpoints` - Optional. `{[string]: number}`. A map of breakpoint names and sizes.
-
-**Returns:**
-
-- an `object` containing the breakpoints, the `breakpoint` and `map` functions
-
-##### Example:
+**Example:**
 
 ```js
-import styled from 'styled-components';
-import {createStatic} from 'styled-components-breakpoint';
+import {createBreakpoint} from 'styled-components-breakpoint';
 
-const breakpoints = createStatic();
-
-const Thing = styled.div`
-
-  font-size: 12px;
-
-  ${breakpoints.tablet`
-    font-size: 16px;
-  `};
-
-  ${breakpoints.desktop`
-    font-size: 24px;
-  `};
-  
-`;
-
-<Thing/>
-
+export const breakpoint = createBreakpoint({
+  xs: 0,
+  sm: 300,
+  md: 600,
+  lg: 900,
+  xl: 1200,
+});
 ```
 
-##### Output:
+### createMap(breakpoints)
 
-```css
-.cESAFm {
-  font-size: 12px;
-}
+Create a `map(valueOrValues, mapValueToStyle)` function to map a set of values to a set of media queries using a set of pre-defined breakpoints.
 
-@media (min-width: 46.0625em) {
-  .cESAFm {
-    font-size: 16px;
-  }
-}
+**Parameters:**
 
-@media (min-width: 64.0625em) {
-  .cESAFm {
-    font-size: 24px;
-  }
-}
+- `breakpoints` - Required - A set of breakpoints.
+
+**Example:**
+
+```js
+import {createMap} from 'styled-components-breakpoint';
+
+export const map = createMap({
+  xs: 0,
+  sm: 300,
+  md: 600,
+  lg: 900,
+  xl: 1200,
+});
 ```
 
 ## Default breakpoints
 
-The default breakpoints are:
+If you don't provide any breakpoints, the default breakpoints used by the `breakpoint()` and `map()` functions are:
 
-```js
-{
-    mobile: 0,      // targeting all devices
-    tablet: 737,    // targeting devices that are larger than the iPhone 6 Plus (which is 736px in landscape mode)
-    desktop: 1025   // targeting devices that are larger than the iPad (which is 1024px in landscape mode)
-}
+| Breakpoint | Size                   | Description                                                                                 |
+| ---------- | ---------------------- | ------------------------------------------------------------------------------------------- |
+| `mobile`   | `0px` (`0em`)          | Targeting all devices                                                                       |
+| `tablet`   | `737px` (`46.0625em`)  | Targeting devices that are LARGER than the iPhone 6 Plus (which is 736px in landscape mode) |
+| `desktop`  | `1195px` (`74.6875em`) | Targeting devices that are LARGER than the 11" iPad Pro (which is 1194px in landscape mode) |
+
+## FAQ
+
+### Q. How do I use CSS objects?
+
+```jsx
+import styled from 'styled-components';
+import breakpoint from 'styled-components-breakpoint';
+
+const RainbowButton = styled.button(
+  {
+    color: 'white',
+    backgroundColor: 'red',
+  },
+  breakpoint('tablet')({
+    backgroundColor: 'blue',
+  }),
+  breakpoint('desktop')({
+    backgroundColor: 'green',
+  }),
+);
+
+<RainbowButton>I am RGB!</RainbowButton>;
 ```
